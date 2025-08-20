@@ -1,6 +1,7 @@
 async function handleStream(request) {
     const url = new URL(request.url)
-    const id = url.searchParams.get('id');
+    const pathParts = url.pathname.split('/').filter(part => part.length > 0);
+    const id = pathParts[0]; // First part after domain is the ID
     apiurl = "https://docs.google.com/uc?export=open&id=" + id;
     
     let out = await fetch(apiurl, {
