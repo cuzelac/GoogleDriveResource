@@ -52,6 +52,9 @@ async function proxyContent(apiurl, cookies) {
     
     // Strip the content-disposition: attachment header
     out.headers.delete('content-disposition');
+
+    // TEST: Manually set application/pdf header
+    out.headers.set('content-type', 'application/pdf');
     
     out.headers.set('Access-Control-Allow-Origin', '*')
     out.headers.set('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS')
