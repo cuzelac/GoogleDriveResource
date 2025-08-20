@@ -45,6 +45,11 @@ async function proxyContent(apiurl, cookies) {
     response.body.pipeTo(writable);
     let out = new Response(readable, response);
     
+    // Copy all original response headers to preserve content-type, etc.
+    for (let [key, value] of response.headers.entries()) {
+        out.headers.set(key, value);
+    }
+    
     // Strip the content-disposition: attachment header
     out.headers.delete('content-disposition');
     
