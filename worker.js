@@ -44,6 +44,10 @@ async function proxyContent(apiurl, cookies) {
     
     response.body.pipeTo(writable);
     let out = new Response(readable, response);
+    
+    // Strip the content-disposition: attachment header
+    out.headers.delete('content-disposition');
+    
     out.headers.set('Access-Control-Allow-Origin', '*')
     out.headers.set('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS')
     out.headers.set('Access-Control-Allow-Headers','Content-Type')
