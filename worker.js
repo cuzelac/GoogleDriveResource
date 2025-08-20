@@ -2,6 +2,7 @@ async function handleStream(request) {
     const url = new URL(request.url)
     const pathParts = url.pathname.split('/').filter(part => part.length > 0);
     const id = pathParts[0]; // First part after domain is the ID
+    const filename = pathParts[1]; // Second part is the filename
     apiurl = "https://docs.google.com/uc?export=open&id=" + id;
     
     let out = await fetch(apiurl, {
@@ -21,14 +22,49 @@ async function handleStream(request) {
         html = html.split("&")[0]
         let authCookie = out.headers.get("set-cookie")
         let pu = "https://docs.google.com/u/0/uc?export=open&confirm=" + html + "&id=" + id;
-        return proxyContent(pu, authCookie)
+        return proxyContent(pu, authCookie, filename)
     } else {
-        return proxyContent("https://docs.google.com/uc?export=open&id=" + id, "");
+        return proxyContent("https://docs.google.com/uc?export=open&id=" + id, "", filename)
     }
 }
 
+// Function to determine content-type based on file extension
+function getContentType(filename) {
+    if (!filename) return 'application/octet-stream';
+    
+    const extension = filename.toLowerCase().split('.').pop();
+    
+    // Document formats
+    if (extension === 'pdf') return 'application/pdf';
+    if (extension === 'docx') return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    if (extension === 'txt') return 'text/plain';
+    
+    // Image formats
+    if (['jpg', 'jpeg'].includes(extension)) return 'image/jpeg';
+    if (extension === 'png') return 'image/png';
+    if (extension === 'webp') return 'image/webp';
+    if (extension === 'gif') return 'image/gif';
+    if (extension === 'svg') return 'image/svg+xml';
+    
+    // Web formats
+    if (['html', 'htm'].includes(extension)) return 'text/html';
+    if (extension === 'php') return 'application/x-httpd-php';
+    if (extension === 'cgi') return 'text/plain';
+    
+    // E-book format
+    if (extension === 'azw') return 'application/vnd.amazon.ebook';
+    
+    // For unusual file types (IPFS hashes, DOI identifiers, etc.)
+    // Check if it's a very long hash-like string or unusual format
+    if (extension.length > 20 || extension.includes('bafykbzace') || extension.includes('vgzm')) {
+        return 'text/plain';
+    }
+    
+    // Default fallback
+    return 'application/octet-stream';
+}
 
-async function proxyContent(apiurl, cookies) {
+async function proxyContent(apiurl, cookies, filename) {
   let response = await fetch(apiurl, {
     redirect: 'follow',
      method: 'GET', // *GET, POST, PUT, DELETE, etc.
@@ -54,8 +90,9 @@ async function proxyContent(apiurl, cookies) {
     // Strip the content-disposition: attachment header
     out.headers.delete('content-disposition');
 
-    // TEST: Manually set application/pdf header
-    out.headers.set('content-type', 'application/pdf');
+    // Set content-type based on file extension
+    const contentType = getContentType(filename);
+    out.headers.set('content-type', contentType);
     
     out.headers.set('Access-Control-Allow-Origin', '*')
     out.headers.set('Access-Control-Allow-Methods', 'GET, HEAD, POST, OPTIONS')
