@@ -1,0 +1,7 @@
+{
+  "name": "gdrive-resource",
+  "main": "worker.js",
+  "compatibility_date": "2025-08-19",
+  "workers_dev": true
+}
+
